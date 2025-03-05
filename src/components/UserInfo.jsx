@@ -17,6 +17,7 @@ class UserInfo extends Component {
         <h2>Name: {this.state.name}</h2>
         <h3>Profession: {this.state.profession}</h3>
         <p>Your lucky number is {luckyNumber}</p>
+        <button onClick={this.props.handleClick}>Show Alert</button>
       </div>
     );
   }
