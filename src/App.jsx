@@ -1,33 +1,51 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Greeting from './components/Greeting';
 import UserInfo from './components/UserInfo';
-import Counter from './components/Counter';
 import TaskForm from './components/TaskForm';
 
 const App = () => {
-  const tasks = ['Task 1', 'Task 2', 'Task 3', 'Task 4', 'Task 5'];
+  const [tasks, setTasks] = useState(['Buy groceries', 'Clean the house', 'Finish homework']);
+  const [search, setSearch] = useState('');
 
-  const getRandomTask = () => {
-    const randomIndex = Math.floor(Math.random() * tasks.length);
-    return tasks[randomIndex];
+  const handleSearch = (e) => setSearch(e.target.value);
+
+  const handleSort = () => {
+    setTasks([...tasks].sort());
   };
 
-  const handleAlert = () => {
-    alert('Button clicked!');
+  const addTask = (newTask) => {
+    setTasks([...tasks, `${newTask.taskName}: ${newTask.description}`]);
   };
+
+  const handleDeleteTask = (taskToDelete) => {
+    if (window.confirm(`Are you sure you want to delete "${taskToDelete}"?`)) {
+      setTasks(tasks.filter((task) => task !== taskToDelete));
+    }
+  };
+
+  const filteredTasks = tasks.filter((task) =>
+    task.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-      <Greeting username1="Alice" username2="Bob" />
-      <UserInfo handleClick={handleAlert} />
-      <Counter />
-      <h3>Random Task: {getRandomTask()}</h3>
+    <div style={{ textAlign: 'center' }}>
+      <Greeting username="Alice" />
+      <UserInfo />
+      <TaskForm addTask={addTask} />
+      <input
+        type="text"
+        placeholder="Search Tasks"
+        value={search}
+        onChange={handleSearch}
+      />
+      <button onClick={handleSort}>Sort by Name</button>
       <ul>
-        {tasks.map((task, index) => (
-          <li key={index}>{task}</li>
+        {filteredTasks.map((task, index) => (
+          <li key={index}>
+            {task} <button onClick={() => handleDeleteTask(task)}>Delete</button>
+          </li>
         ))}
       </ul>
-      <TaskForm />
     </div>
   );
 };

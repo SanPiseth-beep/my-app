@@ -1,17 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-const Greeting = ({ username1, username2 }) => {
+const Greeting = ({ username }) => {
+  const [greeting, setGreeting] = useState(`Hello, ${username}!`);
   const currentDate = new Date().toLocaleDateString();
 
+  const handleChangeGreeting = () => {
+    setGreeting('Welcome to React!');
+  };
+
   return (
-    <div style={{ textAlign: 'center', paddingTop: '150px' }}>
-      <h1>
-        Hello, {username1}!<br />
-        Hello, {username2}!
-      </h1>
-      <p style={{ color: 'blue', fontSize: '18px' }}>
-        Today's date is {currentDate}
-      </p>
+    <div style={{ textAlign: 'center' }}>
+      <h1>{greeting}</h1>
+      <p>Today's date: {currentDate}</p>
+      <button onClick={handleChangeGreeting}>Change Greeting</button>
     </div>
   );
 };
