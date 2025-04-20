@@ -1,51 +1,63 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { collection, query, where, onSnapshot, doc, deleteDoc } from 'firebase/firestore'; // Add doc and deleteDoc
+import { db } from './firebase';
+import { useAuth } from './AuthContext';
 import Greeting from './components/Greeting';
 import UserInfo from './components/UserInfo';
 import TaskForm from './components/TaskForm';
+import AuthForm from './components/AuthForm';
 
 const App = () => {
-  const [tasks, setTasks] = useState(['Buy groceries', 'Clean the house', 'Finish homework']);
-  const [search, setSearch] = useState('');
+  const { user, logout } = useAuth();
+  const [tasks, setTasks] = useState([]);
 
-  const handleSearch = (e) => setSearch(e.target.value);
+  useEffect(() => {
+    if (user) {
+      const q = query(collection(db, 'tasks'), where('userId', '==', user.uid));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const tasksData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setTasks(tasksData);
+      });
+      return unsubscribe;
+    }
+  }, [user]);
 
-  const handleSort = () => {
-    setTasks([...tasks].sort());
-  };
-
-  const addTask = (newTask) => {
-    setTasks([...tasks, `${newTask.taskName}: ${newTask.description}`]);
-  };
-
-  const handleDeleteTask = (taskToDelete) => {
-    if (window.confirm(`Are you sure you want to delete "${taskToDelete}"?`)) {
-      setTasks(tasks.filter((task) => task !== taskToDelete));
+  const handleDeleteTask = async (taskId) => {
+    if (window.confirm('Are you sure you want to delete this task?')) {
+      try {
+        await deleteDoc(doc(db, 'tasks', taskId)); // Delete the task from Firestore
+        alert('Task deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting task:', error);
+        alert('Failed to delete the task. Please try again.');
+      }
     }
   };
 
-  const filteredTasks = tasks.filter((task) =>
-    task.toLowerCase().includes(search.toLowerCase())
-  );
-
+  // Render logic
   return (
     <div style={{ textAlign: 'center' }}>
-      <Greeting username="Alice" />
-      <UserInfo />
-      <TaskForm addTask={addTask} />
-      <input
-        type="text"
-        placeholder="Search Tasks"
-        value={search}
-        onChange={handleSearch}
-      />
-      <button onClick={handleSort}>Sort by Name</button>
-      <ul>
-        {filteredTasks.map((task, index) => (
-          <li key={index}>
-            {task} <button onClick={() => handleDeleteTask(task)}>Delete</button>
-          </li>
-        ))}
-      </ul>
+      {!user ? (
+        <AuthForm />
+      ) : (
+        <>
+          <button onClick={logout}>Logout</button>
+          <Greeting username={user.email} />
+          <UserInfo />
+          <TaskForm />
+          <ul>
+            {tasks.map((task) => (
+              <li key={task.id}>
+                {task.taskName}: {task.taskDescription}{' '}
+                <button onClick={() => handleDeleteTask(task.id)}>Delete</button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 };
